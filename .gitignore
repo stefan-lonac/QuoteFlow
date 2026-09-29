@@ -11,3 +11,4 @@ ios/
 credentials.json
 .env*
 !.env.example
+docs/

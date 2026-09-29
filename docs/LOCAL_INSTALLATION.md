@@ -108,6 +108,12 @@ Oba profila imaju android.buildType = apk. Ne pokreći eas submit; objava na Pla
 
 ### Instalacija na telefon
 
+Na pitanje **Install and run the Android build on an emulator?** izaberi **No** ako želiš instalaciju na svoj telefon. Emulator je virtuelni Android na računaru i zahteva zasebno podešen Android SDK.
+
+Ako si izabrao Yes i dobio `spawn adb ENOENT`, nije uspela lokalna instalacija na emulator: terminal ne nalazi Android Debug Bridge (`adb`). Poruka `Successfully downloaded app` znači da je build artefakt već dostupan; ne pokreći novi build samo zbog ove greške.
+
+Otvori build link koji je EAS ispisao u terminalu, ili na https://expo.dev otvori svoj projekat **quoteflow → Builds → završeni Android build**. Otvori njegov install/download link na telefonu i preuzmi APK. Za ovaj način instalacije nisu potrebni adb, Android Studio niti USB debugging. Ako si napravio preview APK, pokrećeš ga kao zasebnu QuoteFlow aplikaciju, bez Expo Go i Metro servera.
+
 1. Preuzmi APK sa svog EAS build linka, ili ga prenesi USB kablom.
 2. Na telefonu otvori APK iz Downloads.
 3. Ako Android traži, uključi **Install unknown apps / Allow from this source** samo za browser/file manager kojim otvaraš APK.
