@@ -46,7 +46,7 @@ export async function createBackup(store: DataStore, share = true) {
   }
   const backup = await makeBackup(snapshot, files, digest);
   const content = JSON.stringify(backup);
-  const name = `quoteflow-backup-v1-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+  const name = `quoteflow-backup-v2-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
   if (share) await shareText(name, content);
   else if (Platform.OS !== "web")
     await FileSystem.writeAsStringAsync(

@@ -3,6 +3,42 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { migrate, SCHEMA_VERSION } from "../src/data/schema";
 import { entityNames } from "../src/domain/catalog";
+import { migration1 } from "../src/data/migrations/001";
+
+test("populated v1 upgrades to maintenance tables, preserves rows and recovers from failed upgrade", async () => {
+  const db = new DatabaseSync(":memory:");
+  db.exec(migration1);
+  db.exec(
+    "PRAGMA user_version=1; INSERT INTO clients (id,createdAt,updatedAt,name) VALUES ('c','now','now','Keep client'); INSERT INTO maintenance (id,createdAt,updatedAt,name,monthlyPrice) VALUES ('m','now','now','Keep package',123);",
+  );
+  const a = adapter(db);
+  await assert.rejects(
+    migrate({
+      ...a,
+      execAsync: async (sql) => {
+        if (sql === "PRAGMA user_version = 2") throw new Error("Disk failure");
+        await a.execAsync(sql);
+      },
+    }),
+  );
+  assert.equal(db.prepare("PRAGMA user_version").get()!.user_version, 1);
+  await migrate(a);
+  await migrate(a);
+  assert.equal(
+    db.prepare("SELECT name FROM clients").get()!.name,
+    "Keep client",
+  );
+  assert.equal(
+    db.prepare("SELECT monthlyPrice FROM maintenance").get()!.monthlyPrice,
+    123,
+  );
+  db.exec(
+    "INSERT INTO maintenanceContracts (id,createdAt,updatedAt,title,clientId,currency,startDate) VALUES ('a','now','now','Care','c','EUR','2024-01-01'); INSERT INTO maintenanceReceipts (id,createdAt,updatedAt,title,contractId,currency,date) VALUES ('r','now','now','Paid','a','EUR','2024-01-31');",
+  );
+  assert.throws(() => db.exec("DELETE FROM maintenanceContracts WHERE id='a'"));
+  assert.deepEqual(db.prepare("PRAGMA foreign_key_check").all(), []);
+  db.close();
+});
 
 test("full restore handles cyclic proposal/project references without data loss", async () => {
   const db = new DatabaseSync(":memory:");

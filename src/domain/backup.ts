@@ -3,7 +3,7 @@ import type { Snapshot } from "./repositories";
 import { formSchema } from "./validation";
 export type Backup = {
   format: "quoteflow";
-  version: 1;
+  version: 1 | 2;
   createdAt: string;
   data: Snapshot;
   files: { id: string; name: string; base64: string }[];
@@ -25,7 +25,7 @@ export async function makeBackup(
 ): Promise<Backup> {
   const backup = {
     format: "quoteflow" as const,
-    version: 1 as const,
+    version: 2 as const,
     createdAt: new Date().toISOString(),
     data,
     files,
@@ -41,7 +41,7 @@ export async function validateBackup(
   const b = JSON.parse(content) as Backup;
   if (
     b?.format !== "quoteflow" ||
-    b.version !== 1 ||
+    ![1, 2].includes(b.version) ||
     !b.data ||
     !Array.isArray(b.files) ||
     !b.createdAt ||
@@ -50,6 +50,11 @@ export async function validateBackup(
     throw new Error("Unsupported or invalid QuoteFlow backup.");
   if ((await digest(payload(b))) !== b.checksum)
     throw new Error("Backup integrity check failed. No data was changed.");
+  // Authenticate the original payload before upgrading legacy collections.
+  if (b.version === 1) {
+    b.data.maintenanceContracts ??= [];
+    b.data.maintenanceReceipts ??= [];
+  }
   for (const entity of entityNames) {
     const rows = b.data[entity];
     if (!Array.isArray(rows)) throw new Error(`Missing table: ${entity}`);
@@ -163,5 +168,18 @@ export async function validateBackup(
   }
   if (b.data.profile.length > 1)
     throw new Error("Backup contains multiple profiles.");
+  for (const receipt of b.data.maintenanceReceipts) {
+    if (
+      b.data.maintenanceContracts.find((r) => r.id === receipt.contractId)
+        ?.currency !== receipt.currency
+    )
+      throw new Error(
+        "Maintenance receipt currency does not match its agreement.",
+      );
+  }
+  if (b.version === 1) {
+    b.version = 2;
+    b.checksum = await digest(payload(b));
+  }
   return b;
 }

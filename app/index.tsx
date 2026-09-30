@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { allReceipts } from "../src/domain/maintenance";
 import { Pressable, View, useWindowDimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -43,7 +44,7 @@ export default function Dashboard() {
     );
   const profile = data.profile[0];
   const currency = String(profile?.currency || "EUR");
-  const payments = data.payments.filter((p) => p.currency === currency);
+  const payments = allReceipts(data).filter((p) => p.currency === currency);
   const expenses = data.expenses.filter((p) => p.currency === currency);
   const totals = revenue(payments, expenses);
   const now = new Date();

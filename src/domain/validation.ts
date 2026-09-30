@@ -28,6 +28,16 @@ export function formSchema(entity: EntityName) {
       if (f.options && value && !f.options.includes(value))
         issue("Select one of the available options.");
     }
+    if (
+      entity === "maintenanceContracts" &&
+      values.endDate &&
+      values.endDate < values.startDate!
+    )
+      ctx.addIssue({
+        code: "custom",
+        path: ["endDate"],
+        message: "End date cannot be before the start date.",
+      });
     if (entity === "estimateItems") {
       const min = Number(values.minHours);
       const max = Number(values.maxHours);

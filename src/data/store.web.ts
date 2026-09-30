@@ -7,6 +7,8 @@ export async function openStore(): Promise<DataStore> {
   let state: Snapshot =
     JSON.parse(localStorage.getItem(key) || "null") || empty();
   let inTransaction = false;
+  // Add empty collections for existing browser workspaces without resetting data.
+  state = { ...empty(), ...state };
   const persist = () => {
     if (!inTransaction) localStorage.setItem(key, JSON.stringify(state));
   };

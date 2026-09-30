@@ -14,6 +14,20 @@ const digest = async (s: string) =>
   createHash("sha256").update(s).digest("hex");
 const empty = () =>
   Object.fromEntries(entityNames.map((n) => [n, []])) as unknown as Snapshot;
+
+test("legacy v1 backup upgrades after integrity check without losing clients", async () => {
+  const data = empty();
+  data.clients = [valuesToRow("clients", { name: "Original" }, "c")];
+  const b = await makeBackup(data, [], digest);
+  b.version = 1;
+  delete (b.data as Partial<Snapshot>).maintenanceContracts;
+  delete (b.data as Partial<Snapshot>).maintenanceReceipts;
+  const restored = await validateBackup(await signed(b), digest);
+  assert.equal(restored.data.clients[0]?.name, "Original");
+  assert.deepEqual(restored.data.maintenanceContracts, []);
+  assert.deepEqual(restored.data.maintenanceReceipts, []);
+  assert.equal(restored.checksum, await digest(payload(restored)));
+});
 async function signed(b: Backup) {
   b.checksum = await digest(payload(b));
   return JSON.stringify(b);
@@ -27,6 +41,8 @@ test("versioned backup round trips every table", async () => {
       "c",
     ),
   );
+  data.maintenanceContracts = [valuesToRow("maintenanceContracts", { ...initialValues("maintenanceContracts"), title: "Care", clientId: "c", monthlyPrice: "250" }, "agreement")];
+  data.maintenanceReceipts = [valuesToRow("maintenanceReceipts", { ...initialValues("maintenanceReceipts"), title: "First payment", contractId: "agreement", paidAmount: "250" }, "receipt")];
   const b = await makeBackup(data, [], digest);
   assert.deepEqual(
     (await validateBackup(JSON.stringify(b), digest)).data,
@@ -37,7 +53,7 @@ test("modified payload, unsupported version and malformed input are rejected", a
   const b = await makeBackup(empty(), [], digest);
   await assert.rejects(validateBackup("{", digest));
   await assert.rejects(
-    validateBackup(JSON.stringify({ ...b, version: 2 }), digest),
+    validateBackup(JSON.stringify({ ...b, version: 99 }), digest),
     /Unsupported/,
   );
   b.createdAt = "tampered";

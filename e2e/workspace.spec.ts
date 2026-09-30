@@ -61,7 +61,7 @@ test("workspace CRUD, estimate, proposal PDF privacy, backup and mobile navigati
   const backup = JSON.parse(
     await fs.readFile(testInfo.outputPath("backup.json"), "utf8"),
   );
-  expect(backup.version).toBe(1);
+  expect(backup.version).toBe(2);
   expect(
     backup.data.clients.some((c: { name: string }) => c.name === "Test Client"),
   ).toBe(true);

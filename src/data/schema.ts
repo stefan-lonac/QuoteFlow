@@ -1,6 +1,10 @@
 import { migration1 } from "./migrations/001";
-export const SCHEMA_VERSION = 1;
-export const migrations = [{ version: 1, sql: migration1 }];
+import { migration2 } from "./migrations/002";
+export const SCHEMA_VERSION = 2;
+export const migrations = [
+  { version: 1, sql: migration1 },
+  { version: 2, sql: migration2 },
+];
 export async function migrate(db: {
   execAsync(sql: string): Promise<void>;
   getFirstAsync<T>(sql: string): Promise<T | null>;

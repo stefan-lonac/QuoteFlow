@@ -209,9 +209,14 @@ export function Card({
   return <View style={[s.card, style]}>{children}</View>;
 }
 export function Badge({ value }: { value: string }) {
-  const color = ["ACCEPTED", "PAID", "COMPLETED", "READY", "PUBLIC"].includes(
-    value,
-  )
+  const color = [
+    "ACTIVE",
+    "ACCEPTED",
+    "PAID",
+    "COMPLETED",
+    "READY",
+    "PUBLIC",
+  ].includes(value)
     ? colors.green
     : ["IN_PROGRESS", "SENT", "PARTIALLY_PAID"].includes(value)
       ? colors.purple

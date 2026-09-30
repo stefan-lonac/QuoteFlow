@@ -211,6 +211,25 @@ export function EntityDetail({
             onPress={() => setDeleting(true)}
           />
         </View>
+        {entity === "clients" &&
+          related(
+            "Maintenance agreements",
+            "maintenanceContracts",
+            linked("maintenanceContracts", "clientId"),
+            { clientId: row.id },
+          )}
+        {entity === "maintenanceContracts" &&
+          related(
+            "Received payments",
+            "maintenanceReceipts",
+            linked("maintenanceReceipts", "contractId"),
+            {
+              contractId: row.id,
+              currency: String(row.currency),
+              title: String(row.title),
+              paidAmount: String(row.monthlyPrice || 0),
+            },
+          )}
         {fieldsFor(entity)
           .filter(
             (f) =>

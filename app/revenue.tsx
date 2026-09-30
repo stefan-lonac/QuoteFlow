@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { allReceipts } from "../src/domain/maintenance";
 import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useData } from "../src/data/context";
@@ -22,7 +23,7 @@ export default function Revenue() {
   const currencies = [
     ...new Set([
       String(data.profile[0]?.currency || "EUR"),
-      ...data.payments.map((p) => String(p.currency)),
+      ...allReceipts(data).map((p) => String(p.currency)),
       ...data.expenses.map((p) => String(p.currency)),
     ]),
   ];
@@ -31,7 +32,7 @@ export default function Revenue() {
   const matches = (date: unknown) =>
     period === "ALL" ||
     String(date).startsWith(now.slice(0, period === "MONTH" ? 7 : 4));
-  const payments = data.payments.filter(
+  const payments = allReceipts(data).filter(
     (p) => p.currency === currency && matches(p.date),
   );
   const expenses = data.expenses.filter(
@@ -81,6 +82,12 @@ export default function Revenue() {
       </View>
       <View style={[s.row, { flexWrap: "wrap" }]}>
         <Button
+          title="Client maintenance"
+          secondary
+          icon="repeat-outline"
+          onPress={() => router.push("/maintenanceContracts")}
+        />
+        <Button
           title="Record payment"
           icon="add"
           onPress={() => router.push("/payments?new=1")}
@@ -103,7 +110,15 @@ export default function Revenue() {
           payments.map((p) => (
             <Pressable
               key={p.id}
-              onPress={() => router.push(("/payments?detail=" + p.id) as "/")}
+              onPress={() =>
+                router.push(
+                  ((p.source === "maintenance"
+                    ? "/maintenanceReceipts"
+                    : "/payments") +
+                    "?detail=" +
+                    p.id) as "/",
+                )
+              }
               style={[
                 s.between,
                 {

@@ -252,6 +252,41 @@ export const definitions = {
       long("features", "Features (one per line)"),
     ],
   },
+  maintenanceContracts: {
+    title: "Client maintenance",
+    singular: "maintenance agreement",
+    icon: "repeat-outline",
+    description: "Monthly care, clear dates and recurring income.",
+    fields: [
+      text("title", "Agreement name", true),
+      rel("clientId", "Client", "clients", true),
+      num("monthlyPrice", "Monthly fee"),
+      text("currency", "Currency (ISO)", true),
+      { key: "startDate", label: "Starts on", type: "date", required: true },
+      {
+        key: "endDate",
+        label: "Last service day (blank = ongoing)",
+        type: "date",
+        default: "",
+      },
+      num("includedHours", "Included hours per month"),
+      long("notes", "Included services / notes"),
+    ],
+  },
+  maintenanceReceipts: {
+    title: "Maintenance receipts",
+    singular: "maintenance receipt",
+    icon: "wallet-outline",
+    description: "Record money actually received for maintenance.",
+    fields: [
+      text("title", "Description", true),
+      rel("contractId", "Agreement", "maintenanceContracts", true),
+      num("paidAmount", "Amount received"),
+      text("currency", "Currency (ISO)", true),
+      { key: "date", label: "Received on", type: "date", required: true },
+      long("notes", "Months covered / notes"),
+    ],
+  },
   payments: {
     title: "Payments",
     singular: "payment",
@@ -370,6 +405,8 @@ export type EntityName =
   | "technologies"
   | "services"
   | "maintenance"
+  | "maintenanceContracts"
+  | "maintenanceReceipts"
   | "payments"
   | "expenses"
   | "portfolio"

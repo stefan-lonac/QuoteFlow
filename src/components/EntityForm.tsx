@@ -70,6 +70,25 @@ export function EntityForm({
   const submit = handleSubmit(async (values) => {
     try {
       setFailure("");
+      if (entity === "maintenanceReceipts") {
+        const agreement = data?.maintenanceContracts.find(
+          (r) => r.id === values.contractId,
+        );
+        if (!agreement || agreement.currency !== values.currency)
+          throw new Error(
+            "Receipt currency must match its maintenance agreement.",
+          );
+      }
+      if (
+        entity === "maintenanceContracts" &&
+        original &&
+        data?.maintenanceReceipts.some(
+          (r) => r.contractId === original.id && r.currency !== values.currency,
+        )
+      )
+        throw new Error(
+          "This agreement has receipts. Keep its original currency and create a new agreement for a currency change.",
+        );
       const row = valuesToRow(entity, values, original?.id ?? id(), original);
       await store.transaction(async () => {
         await store.repository(entity).save(row);
@@ -150,6 +169,16 @@ export function EntityForm({
                         key={option.id}
                         onPress={() => {
                           onChange(option.id);
+                          if (
+                            entity === "maintenanceReceipts" &&
+                            f.key === "contractId"
+                          ) {
+                            const agreement = data?.maintenanceContracts.find(
+                              (r) => r.id === option.id,
+                            );
+                            if (agreement)
+                              setValue("currency", String(agreement.currency));
+                          }
                           if (
                             entity === "estimateItems" &&
                             f.entity === "services"
